@@ -48,10 +48,6 @@
 	u-boot,dm-pre-reloc;
 };
 
-&emmc {
-	u-boot,dm-pre-reloc;
-};
-
 &gpio3 {
 	u-boot,dm-pre-reloc;
 };

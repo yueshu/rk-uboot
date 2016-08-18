@@ -1,0 +1,5 @@
+build and flash rk3288 board uboot image step:
+1. ./rk_tools/3288/make.sh
+2. ./rk_tools/3288/mkimage.sh
+3. ./rk_tools/3288/flash.sh
+

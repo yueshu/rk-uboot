@@ -11,6 +11,7 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/periph.h>
+#include <asm/arch/timer.h>
 #include <asm/gpio.h>
 #include <dm/pinctrl.h>
 
@@ -18,10 +19,11 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int board_init(void)
 {
-#ifdef CONFIG_ROCKCHIP_SPL_BACK_TO_BROM
+#if 1
 	struct udevice *pinctrl;
 	int ret;
 
+	rockchip_timer_init();
     /*
      * We need to implement sdcard iomux here for the further
      * initlization, otherwise, it'll hit sdcard command sending

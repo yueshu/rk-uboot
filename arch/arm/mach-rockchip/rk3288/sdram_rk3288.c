@@ -26,6 +26,7 @@
 #include <power/regulator.h>
 #include <power/rk808_pmic.h>
 
+#define CONFIG_RK_SPL
 DECLARE_GLOBAL_DATA_PTR;
 
 struct chan_info {
@@ -57,7 +58,7 @@ struct rk3288_sdram_params {
 	struct regmap *map;
 };
 
-#ifdef CONFIG_SPL_BUILD
+#if defined (CONFIG_SPL_BUILD) && !defined(CONFIG_RK_SPL)
 static void copy_to_reg(u32 *dest, const u32 *src, u32 n)
 {
 	int i;
@@ -763,7 +764,7 @@ size_t sdram_size_mb(struct rk3288_pmu *pmu)
 	return size_mb;
 }
 
-#ifdef CONFIG_SPL_BUILD
+#if defined (CONFIG_SPL_BUILD) && !defined(CONFIG_RK_SPL)
 # ifdef CONFIG_ROCKCHIP_FAST_SPL
 static int veyron_init(struct dram_info *priv)
 {
@@ -893,10 +894,11 @@ static int conv_of_platdata(struct udevice *dev)
 
 static int rk3288_dmc_probe(struct udevice *dev)
 {
-#ifdef CONFIG_SPL_BUILD
+ #if defined (CONFIG_SPL_BUILD) && !defined(CONFIG_RK_SPL)
 	struct rk3288_sdram_params *plat = dev_get_platdata(dev);
 #endif
 	struct dram_info *priv = dev_get_priv(dev);
+#ifndef CONFIG_RK_SPL
 	struct regmap *map;
 	int ret;
 	struct udevice *dev_clk;
@@ -942,6 +944,22 @@ static int rk3288_dmc_probe(struct udevice *dev)
 	priv->info.base = 0;
 	priv->info.size = sdram_size_mb(priv->pmu) << 20;
 
+#else
+#define RK_DDR_PARAM_ADDR (32 << 20)
+	struct rk_ddr_param {
+		u32 bank_cnt;
+		u64 start;
+		u64 size;
+	} *ddr_param;
+
+	ddr_param = (struct rk_ddr_param *)RK_DDR_PARAM_ADDR;
+
+	if (ddr_param->bank_cnt == 1) {
+		priv->info.base = ddr_param->start;
+		priv->info.size = ddr_param->size;
+	}
+
+#endif
 	return 0;
 }
 
@@ -968,7 +986,7 @@ U_BOOT_DRIVER(dmc_rk3288) = {
 	.id = UCLASS_RAM,
 	.of_match = rk3288_dmc_ids,
 	.ops = &rk3288_dmc_ops,
-#ifdef CONFIG_SPL_BUILD
+#if defined (CONFIG_SPL_BUILD) && !defined(CONFIG_RK_SPL)
 	.ofdata_to_platdata = rk3288_dmc_ofdata_to_platdata,
 #endif
 	.probe = rk3288_dmc_probe,
